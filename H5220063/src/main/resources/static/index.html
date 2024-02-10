@@ -1,0 +1,255 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Oyuncak Dükkanı</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script>
+        function ekle() {
+            const parametreler = {
+                alisTarihi: document.getElementById("alisTarihi").value,
+                alisFiyati: document.getElementById("alisFiyati").value,
+                ad: document.getElementById("ad").value,
+                tur: document.getElementById("tur").value,
+                desi: document.getElementById("desi").value,
+                notlar: document.getElementById("notlar").value
+            };
+
+            var request = new XMLHttpRequest();
+            request.open("POST", "http://localhost:8080/ekle", true);
+            request.setRequestHeader("Content-type", "application/json");
+            request.onreadystatechange = function () {
+                if (request.readyState === XMLHttpRequest.DONE && request.status === 200) {
+                    alert(request.responseText);
+                    location.reload();
+                }
+            };
+            request.send(JSON.stringify(parametreler));
+        }
+        function guncelle() {
+            const parametreler = {
+                alisTarihi: document.getElementById("guncellealisTarihi").value,
+                alisFiyati: document.getElementById("guncellealisFiyati").value,
+                ad: document.getElementById("guncelleAd").value,
+                tur: document.getElementById("guncelleTur").value,
+                desi: document.getElementById("guncelleDesi").value,
+                notlar: document.getElementById("guncelleNotlar").value
+            }
+            var request = new XMLHttpRequest();
+            request.open("PUT", "http://localhost:8080/guncelle/" + document.getElementById("guncelleID").value, true);
+            request.setRequestHeader("Content-type", "application/json");
+            request.onreadystatechange = function () {
+                if (request.readyState === XMLHttpRequest.DONE && request.status === 200) {
+                    alert(request.responseText);
+                    listele();
+                }
+            };
+            request.send(JSON.stringify(parametreler));
+        }
+        function getir() {
+            const id = document.getElementById("getirId").value;
+
+            fetch("http://localhost:8080/getir?id=" + id)
+                .then(response => response.text())
+                .then(data => {
+                    // Gelen veriyi bir tablo içinde göstermek için HTML elementini oluştur
+                    var table = "<table class='table table-bordered'>";
+                    var lines = data.split('\n');
+
+                    lines.forEach(line => {
+                        // Satırdaki ':' karakterine göre veriyi parçala
+                        var parts = line.split(':');
+
+                        // Satırdaki boşlukları temizle
+                        parts = parts.map(part => part.trim());
+
+                        // Tablo satırını oluştur
+                        table += "<tr>";
+                        table += "<td>" + parts[0] + "</td>";
+                        table += "<td>" + parts[1] + "</td>";
+                        table += "</tr>";
+                    });
+
+                    table += "</table>";
+
+                    // Oluşturulan tabloyu HTML elementine ekle
+                    document.getElementById("oyuncakGetir").innerHTML = table;
+                })
+                .catch(error => console.error("Hata:", error));
+        }
+
+        function listele() {
+            var request = new XMLHttpRequest();
+            request.open("GET", "http://localhost:8080/listele", true);
+            request.onreadystatechange = function () {
+                if (request.readyState === XMLHttpRequest.DONE && request.status === 200) {
+                    var oyuncaklar = JSON.parse(request.responseText);
+                    var tabloBaslik = "<table class='table table-bordered'><tr><th>ID</th><th>Alış Tarihi</th><th>Alış Fiyatı</th><th>Ad</th><th>Tur</th><th>Desi</th><th>Notlar</th></tr>";
+                    var tabloVeri = "";
+                    for (var i = 0; i < oyuncaklar.length; i++) {
+                        tabloVeri += "<tr>" +
+                            "<td>" + oyuncaklar[i].id + "</td>" +
+                            "<td>" + oyuncaklar[i].alisTarihi + "</td>" +
+                            "<td>" + oyuncaklar[i].alisFiyati + "</td>" +
+                            "<td>" + oyuncaklar[i].ad + "</td>" +
+                            "<td>" + oyuncaklar[i].tur + "</td>" +
+                            "<td>" + oyuncaklar[i].desi + "</td>" +
+                            "<td>" + oyuncaklar[i].notlar + "</td>" +
+                            "</tr>";
+                    }
+                    var tabloBitis = "</table>";
+                    document.getElementById("oyuncakListesi").innerHTML = tabloBaslik + tabloVeri + tabloBitis;
+                }
+            };
+            request.send();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var listeleButton = document.getElementById('listeleButton');
+            listeleButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                listele();
+            });
+        });
+        function sil() {
+            var id = document.getElementById("ID").value;
+
+            if (id) {
+                var request = new XMLHttpRequest();
+                request.open("DELETE", "http://localhost:8080/sil?id=" + id, true);
+                request.onreadystatechange = function () {
+                    if (request.readyState === XMLHttpRequest.DONE) {
+                        if (request.status === 200) {
+                            alert("Silme işlemi başarılı.");
+                            listele();
+                        } else {
+                            alert("Silme işlemi başarısız.");
+                        }
+                    }
+                };
+
+                request.send();
+            } else {
+                alert("Lütfen silmek istediğiniz ID'yi girin.");
+            }
+        }
+    </script>
+    <style>
+        body{
+            background-color: #D2E0FB;
+        }
+        .form-label{
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<h3 style="text-align: center">H5220063 SEYHAN IŞIK</h3>
+<div class="container align-content-center">
+    <div class="row justify-content-center">
+        <div class="col-sm-4 border rounded p-3">
+            <form>
+                <div class="mb-3">
+                    <label for="alisTarihi" class="form-label">Alış Tarihi</label>
+                    <input type="date" class="form-control" id="alisTarihi">
+                </div>
+
+                <div class="mb-3">
+                    <label for="alisFiyati" class="form-label">Alış Fiyatı</label>
+                    <input type="number" step="0.01" class="form-control" id="alisFiyati">
+                </div>
+                <div class="mb-3">
+                    <label for="ad" class="form-label">Ad</label>
+                    <input type="text" class="form-control" id="ad">
+                </div>
+                <div class="mb-3">
+                    <label for="tur" class="form-label">Tür</label>
+                    <input type="text" class="form-control" id="tur">
+                </div>
+                <div class="mb-3">
+                    <label for="desi" class="form-label">Desi</label>
+                    <input type="number" class="form-control" id="desi">
+                </div>
+                <div class="mb-3">
+                    <label for="notlar" class="form-label">Notlar</label>
+                    <textarea class="form-control" id="notlar" rows="3"></textarea>
+                </div>
+                <button type="button" onclick="ekle()" class="btn btn-secondary w-25">Ekle</button>
+            </form>
+        </div>
+        <div class="col-sm-4 border rounded p-3">
+            <div id="oyuncakGuncelle">
+                <div class="mb-3">
+                    <label for="guncelleID" class="form-label">Güncellenecek ID</label>
+                    <input type="number" class="form-control" id="guncelleID">
+                </div>
+                <div class="mb-3">
+                    <label for="guncellealisTarihi" class="form-label">Alış Tarihi</label>
+                    <input type="date" class="form-control" id="guncellealisTarihi">
+                </div>
+                <div class="mb-3">
+                    <label for="guncellealisFiyati" class="form-label">Alış Fiyatı</label>
+                    <input type="number" step="0.01" class="form-control" id="guncellealisFiyati">
+                </div>
+                <div class="mb-3">
+                    <label for="guncelleAd" class="form-label">Ad</label>
+                    <input type="text" class="form-control" id="guncelleAd">
+                </div>
+                <div class="mb-3">
+                    <label for="guncelleTur" class="form-label">Tür</label>
+                    <input type="text" class="form-control" id="guncelleTur">
+                </div>
+                <div class="mb-3">
+                    <label for="guncelleDesi" class="form-label">Desi</label>
+                    <input type="number" class="form-control" id="guncelleDesi">
+                </div>
+                <div class="mb-3">
+                    <label for="guncelleNotlar" class="form-label">Notlar</label>
+                    <textarea class="form-control" id="guncelleNotlar" rows="3"></textarea>
+                </div>
+            </div>
+            <button class="btn btn-secondary w-25" onclick="guncelle()">Güncelle</button>
+        </div>
+    </div>
+</div>
+<div class="container align-content-center">
+    <div class="row justify-content-center">
+        <div class="col-sm-8 border rounded p-3">
+            <div>
+                <label for="getirId" class="form-label">Görmek istediğiniz oyuncağın ID'sini giriniz.</label>
+                <input type="number" class="form-control" id="getirId">
+            </div>
+            <button class="btn btn-secondary mt-3 w-25" onclick="getir()">Getir</button>
+            <div id="oyuncakGetir"></div>
+        </div>
+    </div>
+</div>
+<div class="container align-content-center">
+    <div class="row justify-content-center">
+        <div class="col-sm-8 border rounded p-3">
+            <div id="oyuncakListesi"></div>
+            <button class="btn btn-secondary w-25" onclick="listele()">Listele</button>
+        </div>
+    </div>
+</div>
+<div class="container align-content-center">
+    <div class="row justify-content-center">
+        <div class="col-sm-8 border rounded p-3">
+            <div id="oyuncakSil">
+                <div class="mb-3">
+                    <label for="ID" class="form-label">Silmek İstediğiniz Oyuncağın ID'sini giriniz.</label>
+                    <input type="number" class="form-control" id="ID">
+                </div>
+            </div>
+            <button class="btn btn-secondary w-25" onclick="sil()">Sil</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+
+
